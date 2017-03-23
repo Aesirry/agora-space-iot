@@ -1,0 +1,413 @@
+[
+    {
+        "id": "bab61aac.9ee668",
+        "type": "switch",
+        "z": "2d3510e6.bc385",
+        "name": "Detected motion?",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 1,
+        "x": 129.0833282470703,
+        "y": 51.666656494140625,
+        "wires": [
+            [
+                "8006e97d.485838"
+            ]
+        ]
+    },
+    {
+        "id": "92797f65.2df2b",
+        "type": "exec",
+        "z": "2d3510e6.bc385",
+        "command": "curl \"YOURCAMERAIP:8080/photo.jpg\" -o /home/pi/photo.jpg ",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "10",
+        "name": "Save snapshot onto local directory from local ip camera",
+        "x": 532.566650390625,
+        "y": 110,
+        "wires": [
+            [
+                "ba6006db.4483b8"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ba6006db.4483b8",
+        "type": "file in",
+        "z": "2d3510e6.bc385",
+        "name": "Snapshot obtained from IP-Camera in \"~/.node-red\" directory",
+        "filename": "/home/pi/photo.jpg",
+        "format": "",
+        "x": 849.566650390625,
+        "y": 50,
+        "wires": [
+            [
+                "19eb0c17.056054"
+            ]
+        ]
+    },
+    {
+        "id": "19eb0c17.056054",
+        "type": "switch",
+        "z": "2d3510e6.bc385",
+        "name": "Is this a valid photo (It checks the downloaded file from camera running on local IP)",
+        "property": "payload[0]",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "null"
+            },
+            {
+                "t": "nnull"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 575.566650390625,
+        "y": 173.99996948242188,
+        "wires": [
+            [
+                "a58bd272.833f9"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a58bd272.833f9",
+        "type": "template",
+        "z": "2d3510e6.bc385",
+        "name": "Camera not working",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "Camera not working",
+        "x": 882.566650390625,
+        "y": 248.99996948242188,
+        "wires": [
+            [
+                "302b8f4e.98123",
+                "4e136397.160a7c"
+            ]
+        ]
+    },
+    {
+        "id": "d257e008.4ec6f",
+        "type": "switch",
+        "z": "2d3510e6.bc385",
+        "name": "Is any object classified?",
+        "property": "result.images[0].classifiers[0].classes[0]",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "null"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 145.566650390625,
+        "y": 364.0000305175781,
+        "wires": [
+            [
+                "33401d90.848f22",
+                "c0a533d0.7811e"
+            ],
+            [
+                "78bfef31.7a4f3",
+                "95ec7f2d.ed916"
+            ]
+        ]
+    },
+    {
+        "id": "33401d90.848f22",
+        "type": "switch",
+        "z": "2d3510e6.bc385",
+        "name": "Is a \"person\" one among the classified objects",
+        "property": "result.images[0].classifiers[0].classes[0].type_hierarchy",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "/people",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 485.566650390625,
+        "y": 294.0000305175781,
+        "wires": [
+            [
+                "ebb1e8f2.2940d8"
+            ],
+            [
+                "78bfef31.7a4f3",
+                "95ec7f2d.ed916"
+            ]
+        ]
+    },
+    {
+        "id": "ebb1e8f2.2940d8",
+        "type": "template",
+        "z": "2d3510e6.bc385",
+        "name": "A Person has been seen in the image",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "Some one has arrived at your doorstep",
+        "x": 867.566650390625,
+        "y": 294.0000305175781,
+        "wires": [
+            [
+                "f924fa24.12a1a8",
+                "2fd021ff.a6879e"
+            ]
+        ]
+    },
+    {
+        "id": "78bfef31.7a4f3",
+        "type": "template",
+        "z": "2d3510e6.bc385",
+        "name": "Activity is detected",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "Some activity is being detected in front of your house",
+        "x": 448.566650390625,
+        "y": 409.00006103515625,
+        "wires": [
+            [
+                "c6556f32.bc137",
+                "459adb88.ee5564"
+            ]
+        ]
+    },
+    {
+        "id": "bc0091ca.db93c",
+        "type": "e-mail",
+        "z": "2d3510e6.bc385",
+        "server": "smtp-mail.outlook.com",
+        "port": "587",
+        "secure": false,
+        "name": "jpbeltrami@gmail.com",
+        "dname": "Email Service",
+        "x": 1011.2333374023438,
+        "y": 495.66668701171875,
+        "wires": []
+    },
+    {
+        "id": "95ec7f2d.ed916",
+        "type": "file in",
+        "z": "2d3510e6.bc385",
+        "name": "Snapshot photo ",
+        "filename": "photo.jpg",
+        "format": "",
+        "x": 435.23333740234375,
+        "y": 454.666748046875,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c0a533d0.7811e",
+        "type": "file in",
+        "z": "2d3510e6.bc385",
+        "name": "Snapshot photo",
+        "filename": "photo.jpg",
+        "format": "",
+        "x": 427.23333740234375,
+        "y": 347.6667785644531,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2fd021ff.a6879e",
+        "type": "function",
+        "z": "2d3510e6.bc385",
+        "name": "Email-subject: Someone has arrived",
+        "func": "msg.topic=\"Someone has arrived\"\nmsg.filename=new Date().toISOString().replace(/T/, ' ').replace(/\\..+/, '')+\".jpg\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 752.2333374023438,
+        "y": 384.66668701171875,
+        "wires": [
+            [
+                "bc0091ca.db93c"
+            ]
+        ]
+    },
+    {
+        "id": "459adb88.ee5564",
+        "type": "function",
+        "z": "2d3510e6.bc385",
+        "name": "Email-Subject: Activity is detected",
+        "func": "msg.topic=\"Something is moving\"\nmsg.filename=new Date().toISOString().replace(/T/, ' ').replace(/\\..+/, '')+\".jpg\";\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 725,
+        "y": 440,
+        "wires": [
+            [
+                "bc0091ca.db93c"
+            ]
+        ]
+    },
+    {
+        "id": "f66932fd.2161b",
+        "type": "rpi-gpio in",
+        "z": "2d3510e6.bc385",
+        "name": "PIR INPUT ON 11",
+        "pin": "11",
+        "intype": "tri",
+        "debounce": "25",
+        "read": false,
+        "x": 95,
+        "y": 120.66665649414062,
+        "wires": [
+            [
+                "bab61aac.9ee668"
+            ]
+        ]
+    },
+    {
+        "id": "8006e97d.485838",
+        "type": "delay",
+        "z": "2d3510e6.bc385",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "6",
+        "rateUnits": "minute",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": true,
+        "x": 348,
+        "y": 41,
+        "wires": [
+            [
+                "92797f65.2df2b"
+            ]
+        ]
+    },
+    {
+        "id": "58ef1666.0dc298",
+        "type": "debug",
+        "z": "2d3510e6.bc385",
+        "name": "analyze output",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 590,
+        "y": 243,
+        "wires": []
+    },
+    {
+        "id": "78648544.834c7c",
+        "type": "inject",
+        "z": "2d3510e6.bc385",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "x": 101,
+        "y": 183,
+        "wires": [
+            [
+                "92797f65.2df2b"
+            ]
+        ]
+    },
+    {
+        "id": "dcff796.946aa88",
+        "type": "visual-recognition-v3",
+        "z": "2d3510e6.bc385",
+        "name": "Get image information",
+        "apikey": "__PWRD__",
+        "image-feature": "classifyImage",
+        "lang": "en",
+        "x": 177.5,
+        "y": 255,
+        "wires": [
+            [
+                "58ef1666.0dc298",
+                "d257e008.4ec6f"
+            ]
+        ]
+    },
+    {
+        "id": "c6556f32.bc137",
+        "type": "debug",
+        "z": "2d3510e6.bc385",
+        "name": "movement detected",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 650.5,
+        "y": 502,
+        "wires": []
+    },
+    {
+        "id": "302b8f4e.98123",
+        "type": "debug",
+        "z": "2d3510e6.bc385",
+        "name": "camera is down",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 1033.5,
+        "y": 193,
+        "wires": []
+    },
+    {
+        "id": "f924fa24.12a1a8",
+        "type": "debug",
+        "z": "2d3510e6.bc385",
+        "name": "face recognized",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 1076.5,
+        "y": 338,
+        "wires": []
+    },
+    {
+        "id": "4e136397.160a7c",
+        "type": "e-mail",
+        "z": "2d3510e6.bc385",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "secure": true,
+        "name": "",
+        "dname": "",
+        "x": 685,
+        "y": 548,
+        "wires": []
+    }
+]
