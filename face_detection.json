@@ -151,8 +151,8 @@
         ],
         "checkall": "true",
         "outputs": 2,
-        "x": 426.5,
-        "y": 306,
+        "x": 415.25000762939453,
+        "y": 324.7500047683716,
         "wires": [
             [
                 "c2d40952.a34d08"
@@ -170,8 +170,8 @@
         "active": true,
         "console": "false",
         "complete": "true",
-        "x": 860.2500114440918,
-        "y": 492.5000057220459,
+        "x": 963.0000114440918,
+        "y": 436.50000762939453,
         "wires": []
     },
     {
@@ -179,11 +179,11 @@
         "type": "function",
         "z": "e280990.796f768",
         "name": "msg.result.images[0] to face_obj array",
-        "func": "var face_obj = [];\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    node.warn(\"Face processed\");\n    face_obj.push(msg.result.images[0].faces[i]);\n}\n\n// msg.payload = face_obj;\n\nreturn [face_obj]",
+        "func": "// convert photo.jpg -crop 1026x848+999+377 crop-text.jpg\nvar face_obj = [];\nvar exec = global.get('nodeCmd');\nvar command;\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    node.warn(\"Face processed\");\n    face_obj.push(msg.result.images[0].faces[i]);\n    command = \"touch test\"+ i +\".jpg\";\n    exec.run(command);\n}\n\n// msg.payload = face_obj;\n\nreturn [face_obj];",
         "outputs": 1,
         "noerr": 0,
-        "x": 577,
-        "y": 421,
+        "x": 582.75,
+        "y": 412,
         "wires": [
             [
                 "fc453f5f.8b134"
@@ -212,12 +212,11 @@
         "fieldType": "msg",
         "format": "handlebars",
         "syntax": "mustache",
-        "template": "This is the payload: {{Movement detected but no faces in the picture.}} !",
+        "template": "Movement detected but no faces in the picture",
         "x": 666.5,
         "y": 262,
         "wires": [
             [
-                "a0a99c33.be55c",
                 "677e9ce8.3fdaa4"
             ]
         ]
@@ -256,26 +255,21 @@
         "secure": true,
         "name": "jpbeltrami@gmail.com",
         "dname": "",
-        "x": 899.3750152587891,
+        "x": 874.3750152587891,
         "y": 381.2500057220459,
         "wires": []
     },
     {
-        "id": "bf898af.7d46978",
-        "type": "exec",
+        "id": "a6f965a3.a129d8",
+        "type": "file",
         "z": "e280990.796f768",
-        "command": "convert photo.jpg -crop (height)1026x(width)848+(left)999+(top)377 (output file)crop-text.jpg",
-        "addpay": false,
-        "append": "",
-        "useSpawn": "",
-        "timer": "",
-        "name": "crop faces from photo.jpg",
-        "x": 634.3750076293945,
-        "y": 544.3750085830688,
-        "wires": [
-            [],
-            [],
-            []
-        ]
+        "name": "face file",
+        "filename": "/home/pi/.node-red/face.jpg",
+        "appendNewline": false,
+        "createDir": false,
+        "overwriteFile": "true",
+        "x": 758.7500152587891,
+        "y": 563.7500076293945,
+        "wires": []
     }
 ]
