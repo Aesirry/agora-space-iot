@@ -9,8 +9,8 @@
         "useSpawn": "",
         "timer": "10",
         "name": "Save snapshot from raspicam to node-red directory",
-        "x": 437,
-        "y": 162,
+        "x": 406,
+        "y": 113,
         "wires": [
             [
                 "243f5927.802846"
@@ -30,8 +30,8 @@
         "countLimit": "50",
         "blockSize": 0,
         "locked": false,
-        "x": 247.5166778564453,
-        "y": 96,
+        "x": 271.5166778564453,
+        "y": 50,
         "wires": [
             [
                 "832a1cdd.af9fd"
@@ -62,8 +62,8 @@
         "name": "Snapshot obtained from IP-Camera in \"~/.node-red\" directory",
         "filename": "/home/pi/.node-red/photo.jpg",
         "format": "",
-        "x": 621,
-        "y": 61,
+        "x": 868,
+        "y": 52,
         "wires": [
             [
                 "c10a82ca.8deba"
@@ -93,7 +93,9 @@
             [
                 "34dce441.58ee3c"
             ],
-            []
+            [
+                "fc22e488.6dd8f8"
+            ]
         ]
     },
     {
@@ -105,11 +107,13 @@
         "fieldType": "msg",
         "format": "handlebars",
         "syntax": "mustache",
-        "template": "Camera went dark",
-        "x": 692,
-        "y": 211,
+        "template": "Camera went dark, check that it's connected and enabled.",
+        "x": 608,
+        "y": 184,
         "wires": [
-            []
+            [
+                "ef48c767.e50fd8"
+            ]
         ]
     },
     {
@@ -120,38 +124,12 @@
         "apikey": "__PWRD__",
         "image-feature": "detectFaces",
         "lang": "en",
-        "x": 191.5,
-        "y": 349,
+        "x": 219.5,
+        "y": 323,
         "wires": [
             [
                 "e6c5007a.d02b5"
             ]
-        ]
-    },
-    {
-        "id": "c62db3b4.87f36",
-        "type": "debug",
-        "z": "e280990.796f768",
-        "name": "",
-        "active": true,
-        "console": "false",
-        "complete": "payload",
-        "x": 769.5,
-        "y": 260,
-        "wires": []
-    },
-    {
-        "id": "ce6d642e.99f1f8",
-        "type": "function",
-        "z": "e280990.796f768",
-        "name": "format results into array",
-        "func": "",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 389.5,
-        "y": 429,
-        "wires": [
-            []
         ]
     },
     {
@@ -177,55 +155,127 @@
         "y": 306,
         "wires": [
             [
-                "f3fa24b9.834188"
+                "c2d40952.a34d08"
             ],
             [
-                "6c139904.29a038"
+                "31dfed49.b35c52"
             ]
         ]
     },
     {
-        "id": "5edaf091.68275",
+        "id": "fc453f5f.8b134",
         "type": "debug",
         "z": "e280990.796f768",
         "name": "",
         "active": true,
         "console": "false",
-        "complete": "payload",
-        "x": 781.5,
-        "y": 316,
+        "complete": "true",
+        "x": 860.2500114440918,
+        "y": 492.5000057220459,
         "wires": []
     },
     {
-        "id": "f3fa24b9.834188",
+        "id": "31dfed49.b35c52",
         "type": "function",
         "z": "e280990.796f768",
-        "name": "",
-        "func": "msg.payload = \"No faces Detected\"\nreturn msg;",
+        "name": "msg.result.images[0] to face_obj array",
+        "func": "var face_obj = [];\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    node.warn(\"Face processed\");\n    face_obj.push(msg.result.images[0].faces[i]);\n}\n\n// msg.payload = face_obj;\n\nreturn [face_obj]",
         "outputs": 1,
         "noerr": 0,
-        "x": 563.5,
-        "y": 278,
+        "x": 577,
+        "y": 421,
         "wires": [
             [
-                "c62db3b4.87f36"
+                "fc453f5f.8b134"
             ]
         ]
     },
     {
-        "id": "6c139904.29a038",
-        "type": "function",
+        "id": "a0a99c33.be55c",
+        "type": "e-mail",
         "z": "e280990.796f768",
-        "name": "",
-        "func": "msg.payload = \"faces detected\";\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "x": 584.5,
-        "y": 363,
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "secure": true,
+        "name": "jpbeltrami@gmail.com",
+        "dname": "",
+        "x": 889,
+        "y": 244,
+        "wires": []
+    },
+    {
+        "id": "c2d40952.a34d08",
+        "type": "template",
+        "z": "e280990.796f768",
+        "name": "format email",
+        "field": "payload",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "This is the payload: {{Movement detected but no faces in the picture.}} !",
+        "x": 666.5,
+        "y": 262,
         "wires": [
             [
-                "5edaf091.68275"
+                "a0a99c33.be55c",
+                "677e9ce8.3fdaa4"
             ]
+        ]
+    },
+    {
+        "id": "677e9ce8.3fdaa4",
+        "type": "debug",
+        "z": "e280990.796f768",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "false",
+        "x": 847.5,
+        "y": 307,
+        "wires": []
+    },
+    {
+        "id": "ef48c767.e50fd8",
+        "type": "e-mail",
+        "z": "e280990.796f768",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "secure": true,
+        "name": "jpbeltrami@gmail.com",
+        "dname": "jpbeltrami@gmail.com",
+        "x": 934.5,
+        "y": 162,
+        "wires": []
+    },
+    {
+        "id": "2356106c.64923",
+        "type": "e-mail",
+        "z": "e280990.796f768",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "secure": true,
+        "name": "jpbeltrami@gmail.com",
+        "dname": "",
+        "x": 899.3750152587891,
+        "y": 381.2500057220459,
+        "wires": []
+    },
+    {
+        "id": "bf898af.7d46978",
+        "type": "exec",
+        "z": "e280990.796f768",
+        "command": "convert photo.jpg -crop (height)1026x(width)848+(left)999+(top)377 (output file)crop-text.jpg",
+        "addpay": false,
+        "append": "",
+        "useSpawn": "",
+        "timer": "",
+        "name": "crop faces from photo.jpg",
+        "x": 634.3750076293945,
+        "y": 544.3750085830688,
+        "wires": [
+            [],
+            [],
+            []
         ]
     }
 ]
