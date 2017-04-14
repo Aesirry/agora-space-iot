@@ -3,14 +3,14 @@
         "id": "832a1cdd.af9fd",
         "type": "exec",
         "z": "e280990.796f768",
-        "command": "raspistill -q 15 -o /home/pi/.node-red/photo.jpg",
+        "command": "raspistill -q 15 -o /home/pi/.node-red/photos/photo.jpg",
         "addpay": false,
         "append": "",
         "useSpawn": "",
         "timer": "10",
         "name": "Save snapshot from raspicam to node-red directory",
-        "x": 406,
-        "y": 113,
+        "x": 421.7142639160156,
+        "y": 108.00000190734863,
         "wires": [
             [
                 "243f5927.802846"
@@ -33,9 +33,7 @@
         "x": 271.5166778564453,
         "y": 50,
         "wires": [
-            [
-                "832a1cdd.af9fd"
-            ]
+            []
         ]
     },
     {
@@ -60,9 +58,9 @@
         "type": "file in",
         "z": "e280990.796f768",
         "name": "Snapshot obtained from IP-Camera in \"~/.node-red\" directory",
-        "filename": "/home/pi/.node-red/photo.jpg",
+        "filename": "/home/pi/.node-red/photos/photo.jpg",
         "format": "",
-        "x": 868,
+        "x": 885,
         "y": 52,
         "wires": [
             [
@@ -111,9 +109,7 @@
         "x": 608,
         "y": 184,
         "wires": [
-            [
-                "ef48c767.e50fd8"
-            ]
+            []
         ]
     },
     {
@@ -124,8 +120,8 @@
         "apikey": "__PWRD__",
         "image-feature": "detectFaces",
         "lang": "en",
-        "x": 219.5,
-        "y": 323,
+        "x": 210.5,
+        "y": 340,
         "wires": [
             [
                 "e6c5007a.d02b5"
@@ -151,100 +147,33 @@
         ],
         "checkall": "true",
         "outputs": 2,
-        "x": 415.25000762939453,
-        "y": 324.7500047683716,
+        "x": 457.25,
+        "y": 322.75,
         "wires": [
             [
-                "c2d40952.a34d08"
+                "a8ec9e32.817b2"
             ],
             [
-                "31dfed49.b35c52"
+                "31dfed49.b35c52",
+                "f01e09f4.3284b8"
             ]
         ]
-    },
-    {
-        "id": "fc453f5f.8b134",
-        "type": "debug",
-        "z": "e280990.796f768",
-        "name": "",
-        "active": true,
-        "console": "false",
-        "complete": "true",
-        "x": 963.0000114440918,
-        "y": 436.50000762939453,
-        "wires": []
     },
     {
         "id": "31dfed49.b35c52",
         "type": "function",
         "z": "e280990.796f768",
-        "name": "msg.result.images[0] to face_obj array",
-        "func": "// convert photo.jpg -crop 1026x848+999+377 crop-text.jpg\nvar face_obj = [];\nvar exec = global.get('nodeCmd');\nvar command;\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    node.warn(\"Face processed\");\n    face_obj.push(msg.result.images[0].faces[i]);\n    command = \"touch test\"+ i +\".jpg\";\n    exec.run(command);\n}\n\n// msg.payload = face_obj;\n\nreturn [face_obj];",
+        "name": "make files for each face, put info in array, send as JSON",
+        "func": "// convert photo.jpg -crop 1026x848+999+377 crop-text.jpg\nvar face_obj = [];\nvar exec = global.get('nodeCmd');\nvar idGen = global.get('shortID');\nvar jsonInfo;\nvar extract;\nvar upload;\nvar height;\nvar left;\nvar above;\nvar width;\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    // Makes extra image of the detected faces\n    faceID = idGen.generate();\n    height = msg.result.images[0].faces[i].face_location.height;\n    left = msg.result.images[0].faces[i].face_location.left;\n    above = msg.result.images[0].faces[i].face_location.top;\n    width = msg.result.images[0].faces[i].face_location.width;\n    \n    face_obj.push(msg.result.images[0].faces[i]);\n    face_obj.id = faceID;\n    \n    // Run command to extract face\n    extract = \"cd /home/pi/.node-red/photos && convert photo.jpg -crop \" + height + \"x\" + width + \"+\" + left + \"+\" + above + \" /home/pi/.node-red/photos/\" + faceID + \".jpg\";\n    // exec.run(extract);\n    exec.run(extract);\n    \n    // JSON with additional info\n    jsonInfo = JSON.stringify(msg.result.images[0].faces[i]);\n    upload = 'curl -X POST \"http://coderbunker-face-detection.sh1a.qingstor.com\" -F \"key=' + faceID + '.json\" -F \"file=@' + faceID + '.json\" -H \"Content-Type:multipart/form-data\"';\n    node.warn(upload);\n    exec.run(upload);\n}\n\n\nreturn [face_obj];",
         "outputs": 1,
         "noerr": 0,
-        "x": 582.75,
-        "y": 412,
+        "x": 619.75,
+        "y": 441,
         "wires": [
             [
-                "fc453f5f.8b134"
+                "309b1db1.e13e22"
             ]
         ]
-    },
-    {
-        "id": "a0a99c33.be55c",
-        "type": "e-mail",
-        "z": "e280990.796f768",
-        "server": "smtp.gmail.com",
-        "port": "465",
-        "secure": true,
-        "name": "jpbeltrami@gmail.com",
-        "dname": "",
-        "x": 889,
-        "y": 244,
-        "wires": []
-    },
-    {
-        "id": "c2d40952.a34d08",
-        "type": "template",
-        "z": "e280990.796f768",
-        "name": "format email",
-        "field": "payload",
-        "fieldType": "msg",
-        "format": "handlebars",
-        "syntax": "mustache",
-        "template": "Movement detected but no faces in the picture",
-        "x": 666.5,
-        "y": 262,
-        "wires": [
-            [
-                "677e9ce8.3fdaa4"
-            ]
-        ]
-    },
-    {
-        "id": "677e9ce8.3fdaa4",
-        "type": "debug",
-        "z": "e280990.796f768",
-        "name": "",
-        "active": true,
-        "console": "false",
-        "complete": "false",
-        "x": 847.5,
-        "y": 307,
-        "wires": []
-    },
-    {
-        "id": "ef48c767.e50fd8",
-        "type": "e-mail",
-        "z": "e280990.796f768",
-        "server": "smtp.gmail.com",
-        "port": "465",
-        "secure": true,
-        "name": "jpbeltrami@gmail.com",
-        "dname": "jpbeltrami@gmail.com",
-        "x": 934.5,
-        "y": 162,
-        "wires": []
     },
     {
         "id": "2356106c.64923",
@@ -254,22 +183,121 @@
         "port": "465",
         "secure": true,
         "name": "jpbeltrami@gmail.com",
-        "dname": "",
-        "x": 874.3750152587891,
-        "y": 381.2500057220459,
+        "dname": "sends user an email alert",
+        "x": 1172.375,
+        "y": 277.25,
         "wires": []
     },
     {
-        "id": "a6f965a3.a129d8",
-        "type": "file",
+        "id": "309b1db1.e13e22",
+        "type": "debug",
         "z": "e280990.796f768",
-        "name": "face file",
-        "filename": "/home/pi/.node-red/face.jpg",
-        "appendNewline": false,
-        "createDir": false,
-        "overwriteFile": "true",
-        "x": 758.7500152587891,
-        "y": 563.7500076293945,
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "true",
+        "x": 1016,
+        "y": 394,
         "wires": []
+    },
+    {
+        "id": "30efcca4.f22d64",
+        "type": "watch",
+        "z": "e280990.796f768",
+        "name": "listens for file changes in photos folder",
+        "files": "/home/pi/.node-red/photos",
+        "x": 398,
+        "y": 501,
+        "wires": [
+            [
+                "5af50067.a56d"
+            ]
+        ]
+    },
+    {
+        "id": "5af50067.a56d",
+        "type": "function",
+        "z": "e280990.796f768",
+        "name": "sends cropped photo to qingstor via cURL",
+        "func": "var exec = global.get('nodeCmd');\nvar existing_photos = [];\n\nif(msg.file == \"photo.jpg~\"){\n    msg.payload = \"photo not sent: \" + msg.file;\n    return msg;\n}\n\nelse{\nvar upload = 'cd /home/pi/.node-red/photos && curl -X POST \"http://coderbunker-face-detection.sh1a.qingstor.com\" -F \"key=' + msg.file + '\" -F \"file=@/home/pi/.node-red/photos/' + msg.file + '\" -H \"Content-Type:multipart/form-data\"';\n    exec.get(upload, function(data, err){\n        if(!err){\n            node.log(data);\n        }\n        else{\n            node.log(err);\n        }\n    });\n    msg.payload = \"photo sent: \" + msg.file;\n}\n    \nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 775,
+        "y": 577,
+        "wires": [
+            [
+                "b4f6d992.bb4b48"
+            ]
+        ]
+    },
+    {
+        "id": "b4f6d992.bb4b48",
+        "type": "debug",
+        "z": "e280990.796f768",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "payload",
+        "x": 1089,
+        "y": 473,
+        "wires": []
+    },
+    {
+        "id": "f01e09f4.3284b8",
+        "type": "file in",
+        "z": "e280990.796f768",
+        "name": "get the photo",
+        "filename": "/home/pi/.node-red/photos/photo.jpg",
+        "format": "",
+        "x": 637,
+        "y": 368,
+        "wires": [
+            [
+                "77e68926.49ea18"
+            ]
+        ]
+    },
+    {
+        "id": "77e68926.49ea18",
+        "type": "function",
+        "z": "e280990.796f768",
+        "name": "Faces Detected",
+        "func": "msg.topic=\"Faces detected\";\nmsg.filename=new Date().toISOString().replace(/T/, ' ').replace(/\\..+/, '')+\".jpg\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 831,
+        "y": 369,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a8ec9e32.817b2",
+        "type": "file in",
+        "z": "e280990.796f768",
+        "name": "get the photo",
+        "filename": "/home/pi/.node-red/photos/photo.jpg",
+        "format": "",
+        "x": 633,
+        "y": 290,
+        "wires": [
+            [
+                "e63e7b8f.cdd3c8"
+            ]
+        ]
+    },
+    {
+        "id": "e63e7b8f.cdd3c8",
+        "type": "function",
+        "z": "e280990.796f768",
+        "name": "Activity Detected",
+        "func": "msg.topic=\"Activity Detected\";\nmsg.filename=new Date().toISOString().replace(/T/, ' ').replace(/\\..+/, '')+\".jpg\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 840,
+        "y": 287,
+        "wires": [
+            []
+        ]
     }
 ]
