@@ -33,7 +33,9 @@
         "x": 271.5166778564453,
         "y": 50,
         "wires": [
-            []
+            [
+                "832a1cdd.af9fd"
+            ]
         ]
     },
     {
@@ -85,8 +87,8 @@
         ],
         "checkall": "true",
         "outputs": 2,
-        "x": 252,
-        "y": 231,
+        "x": 278.25,
+        "y": 233.50000381469727,
         "wires": [
             [
                 "34dce441.58ee3c"
@@ -164,7 +166,7 @@
         "type": "function",
         "z": "e280990.796f768",
         "name": "make files for each face, put info in array, send as JSON",
-        "func": "// convert photo.jpg -crop 1026x848+999+377 crop-text.jpg\nvar face_obj = [];\nvar exec = global.get('nodeCmd');\nvar idGen = global.get('shortID');\nvar jsonInfo;\nvar extract;\nvar upload;\nvar height;\nvar left;\nvar above;\nvar width;\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    // Makes extra image of the detected faces\n    faceID = idGen.generate();\n    height = msg.result.images[0].faces[i].face_location.height;\n    left = msg.result.images[0].faces[i].face_location.left;\n    above = msg.result.images[0].faces[i].face_location.top;\n    width = msg.result.images[0].faces[i].face_location.width;\n    \n    face_obj.push(msg.result.images[0].faces[i]);\n    face_obj.id = faceID;\n    \n    // Run command to extract face\n    extract = \"cd /home/pi/.node-red/photos && convert photo.jpg -crop \" + height + \"x\" + width + \"+\" + left + \"+\" + above + \" /home/pi/.node-red/photos/\" + faceID + \".jpg\";\n    // exec.run(extract);\n    exec.run(extract);\n    \n    // JSON with additional info\n    jsonInfo = JSON.stringify(msg.result.images[0].faces[i]);\n    upload = 'curl -X POST \"http://coderbunker-face-detection.sh1a.qingstor.com\" -F \"key=' + faceID + '.json\" -F \"file=@' + faceID + '.json\" -H \"Content-Type:multipart/form-data\"';\n    node.warn(upload);\n    exec.run(upload);\n}\n\n\nreturn [face_obj];",
+        "func": "// convert photo.jpg -crop 1026x848+999+377 crop-text.jpg\nvar face_obj = [];\nvar exec = global.get('nodeCmd');\nvar idGen = global.get('shortID');\nvar jsonInfo;\nvar extract;\nvar upload;\nvar height;\nvar left;\nvar above;\nvar width;\n\nfor (var i = 0; i < msg.result.images[0].faces.length; i++){\n    // Makes extra image of the detected faces\n    faceID = idGen.generate();\n    height = msg.result.images[0].faces[i].face_location.height;\n    left = msg.result.images[0].faces[i].face_location.left;\n    above = msg.result.images[0].faces[i].face_location.top;\n    width = msg.result.images[0].faces[i].face_location.width;\n    \n    face_obj.push(msg.result.images[0].faces[i]);\n    face_obj.id = faceID;\n    \n    // Run command to extract face\n    extract = \"cd /home/pi/.node-red/photos && convert photo.jpg -crop \" + height + \"x\" + width + \"+\" + left + \"+\" + above + \" /home/pi/.node-red/photos/\" + faceID + \".jpg\";\n    exec.run(extract);\n    \n    // JSON with additional info\n    jsonInfo = JSON.stringify(msg.result.images[0].faces[i]);\n    jsonInfo = 'cd /home/pi/.node-red/json && echo \"' + jsonInfo + '\" ' + '> ' + faceID + '.json';\n    exec.run(jsonInfo);\n    // upload = 'curl -X POST \"http://coderbunker-face-detection.sh1a.qingstor.com\" -F \"key=' + faceID + '.json\" -F \"file=@' + faceID + '.json\" -H \"Content-Type:multipart/form-data\"';\n}\n\n\nreturn [face_obj];",
         "outputs": 1,
         "noerr": 0,
         "x": 619.75,
@@ -196,8 +198,8 @@
         "active": true,
         "console": "false",
         "complete": "true",
-        "x": 1016,
-        "y": 394,
+        "x": 1036.000015258789,
+        "y": 355.2500057220459,
         "wires": []
     },
     {
@@ -222,8 +224,8 @@
         "func": "var exec = global.get('nodeCmd');\nvar existing_photos = [];\n\nif(msg.file == \"photo.jpg~\"){\n    msg.payload = \"photo not sent: \" + msg.file;\n    return msg;\n}\n\nelse{\nvar upload = 'cd /home/pi/.node-red/photos && curl -X POST \"http://coderbunker-face-detection.sh1a.qingstor.com\" -F \"key=' + msg.file + '\" -F \"file=@/home/pi/.node-red/photos/' + msg.file + '\" -H \"Content-Type:multipart/form-data\"';\n    exec.get(upload, function(data, err){\n        if(!err){\n            node.log(data);\n        }\n        else{\n            node.log(err);\n        }\n    });\n    msg.payload = \"photo sent: \" + msg.file;\n}\n    \nreturn msg;",
         "outputs": 1,
         "noerr": 0,
-        "x": 775,
-        "y": 577,
+        "x": 793.7500152587891,
+        "y": 514.5000085830688,
         "wires": [
             [
                 "b4f6d992.bb4b48"
@@ -238,8 +240,8 @@
         "active": true,
         "console": "false",
         "complete": "payload",
-        "x": 1089,
-        "y": 473,
+        "x": 1094.000015258789,
+        "y": 554.2500076293945,
         "wires": []
     },
     {
@@ -299,5 +301,47 @@
         "wires": [
             []
         ]
+    },
+    {
+        "id": "52f799e0.8dd6e8",
+        "type": "watch",
+        "z": "e280990.796f768",
+        "name": "listens for file changes in json folder",
+        "files": "/home/pi/.node-red/json",
+        "x": 398.75,
+        "y": 577.5,
+        "wires": [
+            [
+                "1e38dd55.f45463"
+            ]
+        ]
+    },
+    {
+        "id": "1e38dd55.f45463",
+        "type": "function",
+        "z": "e280990.796f768",
+        "name": "send the json to qingstor",
+        "func": "var exec = global.get('nodeCmd');\n\nvar upload = 'cd /home/pi/.node-red/json && curl -X POST \"http://coderbunker-face-detection.sh1a.qingstor.com\" -F \"key=' + msg.file + '\" -F \"file=@/home/pi/.node-red/json/' + msg.file + '\" -H \"Content-Type:multipart/form-data\"';\n    exec.get(upload, function(data, err){\n        if(!err){\n            node.log(data);\n        }\n        else{\n            node.log(err);\n        }\n    });\n    msg.payload = \"JSON sent: \" + msg.file;\n    \nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 765,
+        "y": 587.5,
+        "wires": [
+            [
+                "5ffee4c0.4063ac"
+            ]
+        ]
+    },
+    {
+        "id": "5ffee4c0.4063ac",
+        "type": "debug",
+        "z": "e280990.796f768",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "false",
+        "x": 997.5,
+        "y": 635,
+        "wires": []
     }
 ]
